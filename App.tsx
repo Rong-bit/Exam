@@ -1,35 +1,137 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ExamSession, BoardConfig, ViewMode } from './types';
 import Clock from './components/Clock';
 import ExamTable from './components/ExamTable';
 import AdminPanel from './components/AdminPanel';
 import CountdownTimer from './components/CountdownTimer';
+import { getAllClasses, loadClassData, saveClassData, addClass, deleteClass, getDefaultClassData } from './services/storageService';
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('signage');
-  const [config, setConfig] = useState<BoardConfig>({
-    title: '113學年度 第一學期 期末考試',
-    date: new Date().toISOString().split('T')[0],
-    venue: '教學大樓 總體考場',
-    backgroundImageUrl: '',
-    targetClass: '',
-    showAttendance: true,
-    examRules: [
-      '請攜帶准考證或國民身分證。',
-      '手機及電子設備請關機。',
-      '考試開始 20 分鐘後不得入場。'
-    ]
-  });
-
-  const [sessions, setSessions] = useState<ExamSession[]>([
-    { id: '1', subject: '國文 (一)', startTime: '08:10', endTime: '09:00', room: '101', class: '101, 102', invigilator: '林大明', expectedCount: 45, presentCount: 45, absentCount: 0 },
-    { id: '2', subject: '數學 (甲)', startTime: '09:10', endTime: '10:10', room: '101', class: '101, 102', invigilator: '張小華', expectedCount: 45, presentCount: 45, absentCount: 0 },
-    { id: '3', subject: '物理', startTime: '10:30', endTime: '11:30', room: '101', class: '101, 102', invigilator: '王老師', expectedCount: 45, presentCount: 0, absentCount: 45 },
-    { id: '4', subject: '英語聽力', startTime: '13:00', endTime: '14:00', room: '202', class: '201, 202', invigilator: '陳英', expectedCount: 40, presentCount: 0, absentCount: 40 },
-  ]);
+  const [currentClass, setCurrentClass] = useState<string>('');
+  const [classes, setClasses] = useState<string[]>([]);
+  const [showNewClassInput, setShowNewClassInput] = useState(false);
+  const [newClassName, setNewClassName] = useState('');
+  
+  const defaultData = getDefaultClassData();
+  const [config, setConfig] = useState<BoardConfig>(defaultData.config);
+  const [sessions, setSessions] = useState<ExamSession[]>(defaultData.sessions);
 
   const [currentTime, setCurrentTime] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 初始化：載入班級列表和當前班級數據
+  useEffect(() => {
+    const initData = () => {
+      const allClasses = getAllClasses();
+      setClasses(allClasses);
+      
+      if (allClasses.length > 0) {
+        // 如果有班級，載入第一個班級
+        const firstClass = allClasses[0];
+        setCurrentClass(firstClass);
+        loadClassDataIntoState(firstClass);
+      } else {
+        // 如果沒有班級，創建默認班級
+        const defaultClassName = '101';
+        addClass(defaultClassName);
+        setClasses([defaultClassName]);
+        setCurrentClass(defaultClassName);
+        const defaultData = getDefaultClassData();
+        saveClassData(defaultClassName, defaultData);
+        setConfig(defaultData.config);
+        setSessions(defaultData.sessions);
+      }
+      setIsLoading(false);
+    };
+    
+    initData();
+  }, []);
+
+  // 載入指定班級的數據到狀態
+  const loadClassDataIntoState = (className: string) => {
+    const data = loadClassData(className);
+    if (data) {
+      setConfig(data.config);
+      setSessions(data.sessions);
+    } else {
+      // 如果數據不存在，使用默認數據
+      const defaultData = getDefaultClassData();
+      setConfig(defaultData.config);
+      setSessions(defaultData.sessions);
+      saveClassData(className, defaultData);
+    }
+  };
+
+  // 保存當前班級數據
+  const saveCurrentClassData = () => {
+    if (currentClass) {
+      saveClassData(currentClass, { config, sessions });
+    }
+  };
+
+  // 當config或sessions變化時自動保存（使用useRef避免無限循環）
+  const isInitialLoad = useRef(true);
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+    if (!isLoading && currentClass) {
+      saveCurrentClassData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, sessions, currentClass, isLoading]);
+
+  // 切換班級
+  const handleClassChange = (className: string) => {
+    if (className === currentClass) return;
+    setCurrentClass(className);
+    loadClassDataIntoState(className);
+  };
+
+  // 添加新班級
+  const handleAddClass = () => {
+    const trimmedName = newClassName.trim();
+    if (!trimmedName) {
+      alert('請輸入班級名稱');
+      return;
+    }
+    if (classes.includes(trimmedName)) {
+      alert('該班級已存在');
+      return;
+    }
+    if (addClass(trimmedName)) {
+      setClasses(getAllClasses());
+      const defaultData = getDefaultClassData();
+      saveClassData(trimmedName, defaultData);
+      setCurrentClass(trimmedName);
+      loadClassDataIntoState(trimmedName);
+      setNewClassName('');
+      setShowNewClassInput(false);
+    }
+  };
+
+  // 刪除當前班級
+  const handleDeleteClass = () => {
+    if (classes.length <= 1) {
+      alert('至少需要保留一個班級');
+      return;
+    }
+    if (!confirm(`確定要刪除班級「${currentClass}」嗎？此操作無法復原。`)) {
+      return;
+    }
+    if (deleteClass(currentClass)) {
+      const updatedClasses = getAllClasses();
+      setClasses(updatedClasses);
+      if (updatedClasses.length > 0) {
+        const firstClass = updatedClasses[0];
+        setCurrentClass(firstClass);
+        loadClassDataIntoState(firstClass);
+      }
+    }
+  };
 
   // 轉換 Google Drive 連結的輔助函式
   const transformGoogleDriveUrl = (url: string): string => {
@@ -160,21 +262,86 @@ const App: React.FC = () => {
 
       <div className="relative z-10 flex flex-col h-full">
         <header className="px-10 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/20 flex-shrink-0 bg-slate-900/40 backdrop-blur-md">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-1">
             <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <div>
-              <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-lg">{config.title}</h1>
                 {config.targetClass && <span className="bg-amber-500 text-black px-3 py-1 rounded-md text-xs font-black uppercase shadow-lg">{config.targetClass} 專屬</span>}
               </div>
               <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-lg">{config.venue}</p>
             </div>
           </div>
-          <Clock />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-slate-800/60 backdrop-blur-md rounded-xl p-2 border border-white/10">
+              <label className="text-sm font-bold text-blue-300 uppercase tracking-wider px-2">班級</label>
+              <select
+                value={currentClass}
+                onChange={(e) => handleClassChange(e.target.value)}
+                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none min-w-[100px]"
+              >
+                {classes.map(cls => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
+              </select>
+              {showNewClassInput ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newClassName}
+                    onChange={(e) => setNewClassName(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddClass()}
+                    placeholder="班級名稱"
+                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none w-24"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleAddClass}
+                    className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-sm transition-colors"
+                  >
+                    確認
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowNewClassInput(false);
+                      setNewClassName('');
+                    }}
+                    className="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-bold text-sm transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowNewClassInput(true)}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm transition-colors flex items-center gap-1"
+                    title="新增班級"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                  {classes.length > 1 && (
+                    <button
+                      onClick={handleDeleteClass}
+                      className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold text-sm transition-colors"
+                      title="刪除當前班級"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            <Clock />
+          </div>
         </header>
 
         <main className="flex-1 px-10 py-6 overflow-y-auto">
@@ -275,7 +442,13 @@ const App: React.FC = () => {
               </div>
             </div>
           ) : (
-            <AdminPanel config={config} setConfig={setConfig} sessions={sessions} setSessions={setSessions} />
+            <AdminPanel 
+              config={config} 
+              setConfig={setConfig} 
+              sessions={sessions} 
+              setSessions={setSessions}
+              currentClass={currentClass}
+            />
           )}
         </main>
 

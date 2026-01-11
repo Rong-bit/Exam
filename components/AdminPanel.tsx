@@ -1,15 +1,17 @@
 
 import React, { useState } from 'react';
 import { ExamSession, BoardConfig } from '../types';
+import { exportClassData, importClassData } from '../services/storageService';
 
 interface AdminPanelProps {
   config: BoardConfig;
   setConfig: (config: BoardConfig) => void;
   sessions: ExamSession[];
   setSessions: (sessions: ExamSession[]) => void;
+  currentClass: string;
 }
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ config, setConfig, sessions, setSessions }) => {
+const AdminPanel: React.FC<AdminPanelProps> = ({ config, setConfig, sessions, setSessions, currentClass }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
@@ -26,6 +28,51 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, setConfig, sessions, se
   });
   const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null);
   const [newRule, setNewRule] = useState('');
+
+  // 導出數據
+  const handleExport = () => {
+    const data = exportClassData(currentClass);
+    if (!data) {
+      alert('導出失敗，數據為空');
+      return;
+    }
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `exam_data_${currentClass}_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // 導入數據
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const jsonData = event.target?.result as string;
+          if (importClassData(currentClass, jsonData)) {
+            // 重新載入數據
+            window.location.reload();
+          } else {
+            alert('導入失敗，請檢查JSON格式是否正確');
+          }
+        } catch (error) {
+          alert('導入失敗：' + error);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
 
   // 轉換 Google Drive 連結的輔助函式
   const transformGoogleDriveUrl = (url: string): string => {
@@ -155,12 +202,36 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ config, setConfig, sessions, se
   return (
     <div className="space-y-8 max-w-5xl mx-auto p-10 bg-slate-900/95 backdrop-blur-xl rounded-3xl border border-slate-700 text-white shadow-2xl mb-20">
       <div>
-        <h2 className="text-3xl font-black mb-8 border-b border-slate-700 pb-4 flex items-center gap-3">
-          <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          </svg>
-          看板設定與顯示控制
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-3xl font-black border-b border-slate-700 pb-4 flex items-center gap-3 flex-1">
+            <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            </svg>
+            看板設定與顯示控制
+          </h2>
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center gap-2"
+              title="導出當前班級數據"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              導出數據
+            </button>
+            <button
+              onClick={handleImport}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-all shadow-lg active:scale-95 flex items-center gap-2"
+              title="導入數據（會覆蓋當前數據）"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              導入數據
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">考試標題</label>
