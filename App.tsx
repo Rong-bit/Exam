@@ -20,6 +20,7 @@ const App: React.FC = () => {
 
   const [currentTime, setCurrentTime] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showFooter, setShowFooter] = useState(false);
 
   // 初始化：載入班級列表和當前班級數據
   useEffect(() => {
@@ -245,8 +246,25 @@ const App: React.FC = () => {
     backgroundColor: '#0f172a'
   };
 
+  // 處理滑鼠移動事件，檢測是否在底部區域
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const windowHeight = window.innerHeight;
+    const mouseY = e.clientY;
+    const threshold = 150; // 距離底部 150px 時顯示
+    
+    if (windowHeight - mouseY <= threshold) {
+      setShowFooter(true);
+    } else {
+      setShowFooter(false);
+    }
+  };
+
   return (
-    <div className="h-screen flex flex-col relative transition-all duration-1000 ease-in-out font-['Noto Sans TC'] overflow-hidden" style={backgroundStyle}>
+    <div 
+      className="h-screen flex flex-col relative transition-all duration-1000 ease-in-out font-['Noto Sans TC'] overflow-hidden" 
+      style={backgroundStyle}
+      onMouseMove={handleMouseMove}
+    >
       {processedUrl && imageError && (
         <div className="absolute top-20 right-4 z-50 bg-red-600/90 backdrop-blur-md text-white p-4 rounded-xl shadow-2xl border border-red-500/50 max-w-sm animate-fade-in">
           <div className="flex items-start gap-3">
@@ -452,7 +470,9 @@ const App: React.FC = () => {
           )}
         </main>
 
-        <footer className="p-6 border-t border-white/10 flex justify-center gap-6 flex-shrink-0 bg-slate-900/60 backdrop-blur-md">
+        <footer className={`fixed bottom-0 left-0 right-0 p-6 border-t border-white/10 flex justify-center gap-6 bg-slate-900/60 backdrop-blur-md transition-all duration-300 z-50 ${
+          showFooter ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
+        }`}>
           <button onClick={() => setViewMode('signage')} className={`px-10 py-4 rounded-full font-black text-sm transition-all flex items-center gap-3 tracking-widest uppercase ${viewMode === 'signage' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-white/5 text-white/50 hover:text-white border border-white/10'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             白板展示
