@@ -6,9 +6,10 @@ import CountdownTimer from './CountdownTimer';
 interface ExamTableProps {
   sessions: ExamSession[];
   currentTime: string;
+  targetClass?: string;
 }
 
-const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime }) => {
+const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime, targetClass }) => {
   const getStatus = (start: string, end: string) => {
     if (currentTime < start) return 'upcoming';
     if (currentTime >= start && currentTime < end) return 'ongoing';
@@ -77,7 +78,7 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime }) => {
                     <span className="px-2 py-1 bg-black border border-white/20 rounded inline-block">{session.subject}</span>
                   </td>
                   <td className="px-4 py-4 text-base text-slate-100 drop-shadow-md">
-                    <span className="px-2 py-1 bg-black border border-white/20 rounded inline-block">{session.class}</span>
+                    <span className="px-2 py-1 bg-black border border-white/20 rounded inline-block">{targetClass || session.class || '全部班級'}</span>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-300 italic drop-shadow-md">
                     <span className="px-2 py-1 bg-black border border-white/20 rounded inline-block">{session.invigilator || '--'}</span>
