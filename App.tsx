@@ -16,7 +16,6 @@ const App: React.FC = () => {
     targetClass: '',
     showAttendance: true,
     examRules: [
-      '請攜帶准考證或學生證。',
       '手機及電子設備請關機。',
       '考試開始 20 分鐘後不得入場。',
       '考試後 20 分鐘才得交卷。',
