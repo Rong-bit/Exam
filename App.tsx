@@ -267,8 +267,8 @@ const App: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', -1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">-</button>
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', 1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">+</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', -1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">-</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', 1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">+</button>
                         </div>
                       </div>
 
@@ -280,8 +280,8 @@ const App: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', -1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">-</button>
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', 1)} className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xl transition-all active:scale-95 shadow-xl shadow-blue-600/40 border border-white/10">+</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', -1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">-</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', 1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">+</button>
                         </div>
                       </div>
 
