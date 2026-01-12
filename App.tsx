@@ -270,6 +270,11 @@ const App: React.FC = () => {
               <div className="lg:col-span-6 space-y-6">
                 {ongoingExam && (
                   <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-6 right-6 z-20">
+                      <span className="text-lg font-black text-white px-3 py-1 bg-black border border-white/20 rounded-lg inline-block font-mono">
+                        {ongoingExam.startTime} - {ongoingExam.endTime}
+                      </span>
+                    </div>
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-4">
                         <span className="inline-block px-4 py-1 bg-red-600 text-white text-[11px] font-black rounded-lg animate-pulse uppercase tracking-widest">進行中考試 NOW</span>
