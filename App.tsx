@@ -16,12 +16,11 @@ const App: React.FC = () => {
     targetClass: '',
     showAttendance: true,
     examRules: [
+      '請攜帶准考證或學生證。',
       '手機及電子設備請關機。',
       '考試開始 20 分鐘後不得入場。',
       '考試後 20 分鐘才得交卷。',
-      '考試中不得交談或作弊。',
       '桌子請旋轉180度，抽屜朝前。',
-
     ]
   });
 
@@ -278,10 +277,15 @@ const App: React.FC = () => {
                       <h2 className="text-5xl font-black text-white mb-2 tracking-tighter px-4 py-2 bg-black border border-white/20 rounded-lg inline-block">{ongoingExam.subject}</h2>
                       <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2">班級: {config.targetClass || ongoingExam.class || '全部班級'}</p>
                     </div>
-                    <div className="relative z-10 text-right">
+                    <div className="relative z-10 w-full md:w-auto">
                       <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">剩餘時間</p>
-                      <div className="px-4 py-2 bg-black border border-white/20 rounded-lg inline-block mt-2">
-                        <CountdownTimer endTime={ongoingExam.endTime} className="text-6xl font-black text-white drop-shadow-2xl tabular-nums tracking-tighter" />
+                      <div className="px-4 py-2 bg-black border border-white/20 rounded-lg mt-2 w-full md:w-auto">
+                        <CountdownTimer 
+                          startTime={ongoingExam.startTime}
+                          endTime={ongoingExam.endTime} 
+                          className="w-full"
+                          showProgressBar={true}
+                        />
                       </div>
                     </div>
                   </div>
