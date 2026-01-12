@@ -218,10 +218,10 @@ const App: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-md px-4 py-2 bg-black/20 border border-white/20 rounded-lg">{config.title}</h1>
+                <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-md px-4 py-2 bg-black border border-white/20 rounded-lg">{config.title}</h1>
                 {config.targetClass && <span className="bg-amber-500 text-black px-3 py-1 rounded-md text-xs font-black uppercase shadow-lg">{config.targetClass} 專屬</span>}
               </div>
-              <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-md px-3 py-1 bg-black/20 border border-white/20 rounded-lg inline-block">{config.venue}</p>
+              <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-md px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">{config.venue}</p>
             </div>
           </div>
           <Clock />
@@ -237,12 +237,12 @@ const App: React.FC = () => {
                       <div className="flex items-center gap-3 mb-4">
                         <span className="inline-block px-4 py-1 bg-red-600 text-white text-[11px] font-black rounded-lg animate-pulse uppercase tracking-widest">進行中考試 NOW</span>
                       </div>
-                      <h2 className="text-5xl font-black text-white mb-2 tracking-tighter px-4 py-2 bg-black/20 border border-white/20 rounded-lg inline-block">{ongoingExam.subject}</h2>
-                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black/20 border border-white/20 rounded-lg inline-block mt-2">考場: {ongoingExam.room} | 班級: {ongoingExam.class}</p>
+                      <h2 className="text-5xl font-black text-white mb-2 tracking-tighter px-4 py-2 bg-black border border-white/20 rounded-lg inline-block">{ongoingExam.subject}</h2>
+                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2">考場: {ongoingExam.room} | 班級: {ongoingExam.class}</p>
                     </div>
                     <div className="relative z-10 text-right">
-                      <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2 px-3 py-1 bg-black/20 border border-white/20 rounded-lg inline-block">剩餘時間</p>
-                      <div className="px-4 py-2 bg-black/20 border border-white/20 rounded-lg inline-block mt-2">
+                      <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">剩餘時間</p>
+                      <div className="px-4 py-2 bg-black border border-white/20 rounded-lg inline-block mt-2">
                         <CountdownTimer endTime={ongoingExam.endTime} className="text-6xl font-black text-white drop-shadow-2xl tabular-nums tracking-tighter" />
                       </div>
                     </div>
@@ -254,7 +254,7 @@ const App: React.FC = () => {
               <div className="lg:col-span-4 space-y-6">
                 <div className="bg-transparent backdrop-blur-sm p-5 rounded-[24px] border border-white/5 shadow-2xl">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-black text-white uppercase tracking-widest px-3 py-1 bg-black/20 border border-white/20 rounded-lg">應考人數統計</h3>
+                    <h3 className="text-lg font-black text-white uppercase tracking-widest px-3 py-1 bg-black border border-white/20 rounded-lg">應考人數統計</h3>
                     {!config.showAttendance && <span className="px-2 py-1 bg-slate-800 text-slate-500 rounded text-[9px] font-bold tracking-widest">HIDDEN</span>}
                     <span className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase">TOUCH TO EDIT</span>
                   </div>
@@ -263,8 +263,8 @@ const App: React.FC = () => {
                     <div className="space-y-5">
                       <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black/20 border border-white/20 rounded-lg">應到人數 (EXPECTED)</span>
-                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black/20 border border-white/20 rounded-lg">
+                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black border border-white/20 rounded-lg">應到人數 (EXPECTED)</span>
+                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg">
                             {config.showAttendance ? (activeFocusSession.expectedCount ?? 0) : ''}
                           </span>
                         </div>
@@ -276,8 +276,8 @@ const App: React.FC = () => {
 
                       <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black/20 border border-white/20 rounded-lg">實到人數 (PRESENT)</span>
-                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black/20 border border-white/20 rounded-lg">
+                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black border border-white/20 rounded-lg">實到人數 (PRESENT)</span>
+                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg">
                             {config.showAttendance ? (activeFocusSession.presentCount ?? 0) : ''}
                           </span>
                         </div>
@@ -288,9 +288,9 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="pt-4 border-t border-white/5">
-                        <p className="text-lg font-black text-blue-400 uppercase tracking-widest mb-2 px-3 py-1 bg-black/20 border border-white/20 rounded-lg inline-block">缺席人數 (ABSENT)</p>
+                        <p className="text-lg font-black text-blue-400 uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">缺席人數 (ABSENT)</p>
                         <div className="flex items-center justify-between">
-                          <p className={`text-3xl font-black tabular-nums transition-colors duration-500 px-4 py-2 bg-black/20 border border-white/20 rounded-lg ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-slate-800'}`}>
+                          <p className={`text-3xl font-black tabular-nums transition-colors duration-500 px-4 py-2 bg-black border border-white/20 rounded-lg ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-slate-800'}`}>
                             {config.showAttendance ? (activeFocusSession.absentCount ?? 0) : ''}
                           </p>
                           {config.showAttendance && (activeFocusSession.absentCount || 0) > 0 && (
@@ -309,11 +309,11 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="bg-transparent backdrop-blur-sm p-6 rounded-[32px] border border-white/5 shadow-xl">
-                  <h3 className="text-lg font-black text-slate-200 mb-5 uppercase tracking-widest px-3 py-1 bg-black/20 border border-white/20 rounded-lg inline-block">考場規範</h3>
+                  <h3 className="text-lg font-black text-slate-200 mb-5 uppercase tracking-widest px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">考場規範</h3>
                   {config.examRules && config.examRules.length > 0 ? (
                     <ul className="space-y-3 text-slate-300 font-bold text-base leading-relaxed">
                       {config.examRules.map((rule, index) => (
-                        <li key={index} className="flex gap-5 px-3 py-2 bg-black/20 border border-white/20 rounded-lg">
+                        <li key={index} className="flex gap-5 px-3 py-2 bg-black border border-white/20 rounded-lg">
                           <span className="text-blue-500 font-black text-xl">{String(index + 1).padStart(2, '0')}</span>
                           <span>{rule}</span>
                         </li>
