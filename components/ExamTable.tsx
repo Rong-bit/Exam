@@ -20,11 +20,11 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime }) => {
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-transparent">
-            <th className="px-4 py-3 text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md border-b border-white/5">狀態</th>
-            <th className="px-4 py-3 text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md border-b border-white/5">時間與倒數</th>
-            <th className="px-4 py-3 text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md border-b border-white/5">科目</th>
-            <th className="px-4 py-3 text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md border-b border-white/5">班級</th>
-            <th className="px-4 py-3 text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md border-b border-white/5">監考老師</th>
+            <th className="px-4 py-3 border-b border-white/5"><span className="text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">狀態</span></th>
+            <th className="px-4 py-3 border-b border-white/5"><span className="text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">時間與倒數</span></th>
+            <th className="px-4 py-3 border-b border-white/5"><span className="text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">科目</span></th>
+            <th className="px-4 py-3 border-b border-white/5"><span className="text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">班級</span></th>
+            <th className="px-4 py-3 border-b border-white/5"><span className="text-slate-200 font-bold uppercase tracking-wider text-xs drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">監考老師</span></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/10">
@@ -58,27 +58,29 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime }) => {
                     )}
                   </td>
                   <td className="px-4 py-4 font-mono">
-                    <div className="text-base text-slate-100 drop-shadow-md">
+                    <div className="text-base text-slate-100 drop-shadow-md px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">
                       {session.startTime} - {session.endTime}
                     </div>
                     {status === 'ongoing' && (
                       <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-red-400 font-bold uppercase">剩餘</span>
-                        <CountdownTimer 
-                          endTime={session.endTime} 
-                          className="text-sm text-white font-black drop-shadow-sm" 
-                        />
+                        <span className="text-xs text-red-400 font-bold uppercase px-2 py-1 bg-black/20 border border-white/20 rounded">剩餘</span>
+                        <span className="px-2 py-1 bg-black/20 border border-white/20 rounded">
+                          <CountdownTimer 
+                            endTime={session.endTime} 
+                            className="text-sm text-white font-black drop-shadow-sm" 
+                          />
+                        </span>
                       </div>
                     )}
                   </td>
                   <td className="px-4 py-4 text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                    {session.subject}
+                    <span className="px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">{session.subject}</span>
                   </td>
                   <td className="px-4 py-4 text-base text-slate-100 drop-shadow-md">
-                    {session.class}
+                    <span className="px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">{session.class}</span>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-300 italic drop-shadow-md">
-                    {session.invigilator || '--'}
+                    <span className="px-2 py-1 bg-black/20 border border-white/20 rounded inline-block">{session.invigilator || '--'}</span>
                   </td>
                 </tr>
               );
