@@ -65,12 +65,14 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime, targetClas
                     {status === 'ongoing' && (
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-xs text-red-400 font-bold uppercase px-2 py-1 bg-black border border-white/20 rounded">剩餘</span>
-                        <span className="px-2 py-1 bg-black border border-white/20 rounded">
+                        <div className="flex-1 px-2 py-1 bg-black border border-white/20 rounded">
                           <CountdownTimer 
+                            startTime={session.startTime}
                             endTime={session.endTime} 
-                            className="text-sm text-white font-black drop-shadow-sm" 
+                            className="w-full"
+                            showProgressBar={true}
                           />
-                        </span>
+                        </div>
                       </div>
                     )}
                   </td>
