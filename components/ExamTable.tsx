@@ -91,4 +91,3 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime }) => {
 };
 
 export default ExamTable;
-

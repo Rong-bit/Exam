@@ -229,7 +229,7 @@ const App: React.FC = () => {
 
           <main className="flex-1 px-10 py-6">
           {viewMode === 'signage' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-[1900px] mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
               <div className="lg:col-span-6 space-y-6">
                 {ongoingExam && (
                   <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] flex flex-col md:flex-row items-center justify-between shadow-2xl relative overflow-hidden">
