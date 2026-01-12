@@ -271,7 +271,7 @@ const App: React.FC = () => {
                 {ongoingExam && (
                   <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] shadow-2xl relative overflow-hidden">
                     <div className="absolute top-6 right-6 z-20">
-                      <span className="text-lg font-black text-white px-3 py-1 bg-black border border-white/20 rounded-lg inline-block font-mono">
+                      <span className="text-5xl font-black text-white tracking-tighter px-4 py-2 bg-black border border-white/20 rounded-lg inline-block font-mono">
                         {ongoingExam.startTime} - {ongoingExam.endTime}
                       </span>
                     </div>
