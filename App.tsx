@@ -1,150 +1,35 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ExamSession, BoardConfig, ViewMode } from './types';
 import Clock from './components/Clock';
 import ExamTable from './components/ExamTable';
 import AdminPanel from './components/AdminPanel';
 import CountdownTimer from './components/CountdownTimer';
-import { getAllClasses, loadClassData, saveClassData, addClass, deleteClass, getDefaultClassData } from './services/storageService';
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('signage');
-  const [currentClass, setCurrentClass] = useState<string>('');
-  const [classes, setClasses] = useState<string[]>([]);
-  const [showNewClassInput, setShowNewClassInput] = useState(false);
-  const [newClassName, setNewClassName] = useState('');
-  
-  const defaultData = getDefaultClassData();
-  const [config, setConfig] = useState<BoardConfig>(defaultData.config);
-  const [sessions, setSessions] = useState<ExamSession[]>(defaultData.sessions);
+  const [config, setConfig] = useState<BoardConfig>({
+    title: '113學年度 第一學期 期末考試',
+    date: new Date().toISOString().split('T')[0],
+    venue: '教學大樓 總體考場',
+    backgroundImageUrl: '',
+    targetClass: '',
+    showAttendance: true,
+    examRules: [
+      '請攜帶准考證或國民身分證。',
+      '手機及電子設備請關機。',
+      '考試開始 20 分鐘後不得入場。'
+    ]
+  });
+
+  const [sessions, setSessions] = useState<ExamSession[]>([
+    { id: '1', subject: '國文 (一)', startTime: '08:10', endTime: '09:00', room: '101', class: '101, 102', invigilator: '林大明', expectedCount: 45, presentCount: 45, absentCount: 0 },
+    { id: '2', subject: '數學 (甲)', startTime: '09:10', endTime: '10:10', room: '101', class: '101, 102', invigilator: '張小華', expectedCount: 45, presentCount: 45, absentCount: 0 },
+    { id: '3', subject: '物理', startTime: '10:30', endTime: '11:30', room: '101', class: '101, 102', invigilator: '王老師', expectedCount: 45, presentCount: 0, absentCount: 45 },
+    { id: '4', subject: '英語聽力', startTime: '13:00', endTime: '14:00', room: '202', class: '201, 202', invigilator: '陳英', expectedCount: 40, presentCount: 0, absentCount: 40 },
+  ]);
 
   const [currentTime, setCurrentTime] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [showFooter, setShowFooter] = useState(false);
-
-  // 初始化：載入班級列表和當前班級數據
-  useEffect(() => {
-    const initData = () => {
-      const allClasses = getAllClasses();
-      setClasses(allClasses);
-      
-      if (allClasses.length > 0) {
-        // 如果有班級，載入第一個班級
-        const firstClass = allClasses[0];
-        setCurrentClass(firstClass);
-        loadClassDataIntoState(firstClass);
-      } else {
-        // 如果沒有班級，創建默認班級
-        const defaultClassName = '101';
-        addClass(defaultClassName);
-        setClasses([defaultClassName]);
-        setCurrentClass(defaultClassName);
-        const defaultData = getDefaultClassData();
-        saveClassData(defaultClassName, defaultData);
-        setConfig(defaultData.config);
-        setSessions(defaultData.sessions);
-      }
-      setIsLoading(false);
-    };
-    
-    initData();
-  }, []);
-
-  // 載入指定班級的數據到狀態
-  const loadClassDataIntoState = (className: string) => {
-    const data = loadClassData(className);
-    if (data) {
-      setConfig(data.config);
-      setSessions(data.sessions);
-    } else {
-      // 如果數據不存在，使用默認數據
-      const defaultData = getDefaultClassData();
-      setConfig(defaultData.config);
-      setSessions(defaultData.sessions);
-      saveClassData(className, defaultData);
-    }
-  };
-
-  // 保存當前班級數據
-  const saveCurrentClassData = () => {
-    if (currentClass) {
-      saveClassData(currentClass, { config, sessions });
-    }
-  };
-
-  // 當config或sessions變化時自動保存（使用useRef避免無限循環）
-  const isInitialLoad = useRef(true);
-  useEffect(() => {
-    if (isInitialLoad.current) {
-      isInitialLoad.current = false;
-      return;
-    }
-    if (!isLoading && currentClass) {
-      saveCurrentClassData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, sessions, currentClass, isLoading]);
-
-  // 切換班級
-  const handleClassChange = (className: string) => {
-    if (className === currentClass) return;
-    setCurrentClass(className);
-    loadClassDataIntoState(className);
-  };
-
-  // 添加新班級
-  const handleAddClass = () => {
-    const trimmedName = newClassName.trim();
-    if (!trimmedName) {
-      alert('請輸入班級名稱');
-      return;
-    }
-    if (classes.includes(trimmedName)) {
-      alert('該班級已存在');
-      return;
-    }
-    if (addClass(trimmedName)) {
-      setClasses(getAllClasses());
-      const defaultData = getDefaultClassData();
-      saveClassData(trimmedName, defaultData);
-      setCurrentClass(trimmedName);
-      loadClassDataIntoState(trimmedName);
-      setNewClassName('');
-      setShowNewClassInput(false);
-    }
-  };
-
-  // 刪除當前班級
-  const handleDeleteClass = () => {
-    if (classes.length <= 1) {
-      alert('至少需要保留一個班級');
-      return;
-    }
-    if (!confirm(`確定要刪除班級「${currentClass}」嗎？此操作無法復原。`)) {
-      return;
-    }
-    if (deleteClass(currentClass)) {
-      const updatedClasses = getAllClasses();
-      setClasses(updatedClasses);
-      if (updatedClasses.length > 0) {
-        const firstClass = updatedClasses[0];
-        setCurrentClass(firstClass);
-        loadClassDataIntoState(firstClass);
-      }
-    }
-  };
-
-  // 轉換 Google Drive 連結的輔助函式
-  const transformGoogleDriveUrl = (url: string): string => {
-    if (!url) return '';
-    const driveRegex = /\/file\/d\/([^\/]+)/;
-    const match = url.match(driveRegex);
-    if (match && match[1]) {
-      // 使用 lh3.googleusercontent.com 繞過預覽頁面直接獲取圖片
-      return `https://lh3.googleusercontent.com/d/${match[1]}`;
-    }
-    return url;
-  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -165,6 +50,7 @@ const App: React.FC = () => {
   }, [sessions, config.targetClass]);
 
   const ongoingExam = filteredSessions.find(s => currentTime >= s.startTime && currentTime < s.endTime);
+  // 永遠顯示統計區塊：優先使用活動中考科，否則使用下一個即將開始的考科，或使用第一個考科
   const activeFocusSession = ongoingExam || filteredSessions.find(s => currentTime < s.endTime) || filteredSessions[0] || null;
 
   const updateAttendance = (sessionId: string, type: 'present' | 'expected', delta: number) => {
@@ -186,45 +72,64 @@ const App: React.FC = () => {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
-  // 取得處理後的網址
-  const processedUrl = transformGoogleDriveUrl(config.backgroundImageUrl?.trim() || '');
+  // 清理背景圖 URL（移除前後空格）
+  const cleanedBackgroundUrl = config.backgroundImageUrl?.trim() || '';
 
   useEffect(() => {
-    if (processedUrl) {
+    if (cleanedBackgroundUrl) {
       setImageError(false);
       setImageLoading(true);
       let isCancelled = false;
       let loadingCompleted = false;
+      let attempts = 0;
+      const maxAttempts = 2;
       
-      const img = new Image();
-      // Google Drive 的直連圖片通常支援匿名存取，但如果發生跨域問題可嘗試開啟
-      // img.crossOrigin = 'anonymous'; 
-      
-      img.onload = () => {
-        if (!isCancelled && !loadingCompleted) {
-          loadingCompleted = true;
-          setImageError(false);
-          setImageLoading(false);
+      // 預載入圖片以檢查是否可載入
+      const tryLoadImage = (useCors: boolean = false) => {
+        if (isCancelled || loadingCompleted) return;
+        
+        attempts++;
+        const img = new Image();
+        if (useCors) {
+          img.crossOrigin = 'anonymous';
         }
+        
+        img.onload = () => {
+          if (!isCancelled && !loadingCompleted) {
+            loadingCompleted = true;
+            setImageError(false);
+            setImageLoading(false);
+          }
+        };
+        
+        img.onerror = (error) => {
+          if (!isCancelled && !loadingCompleted) {
+            // 如果第一次嘗試失敗且未使用 CORS，嘗試使用 CORS
+            if (!useCors && attempts < maxAttempts) {
+              setTimeout(() => tryLoadImage(true), 100);
+            } else {
+              loadingCompleted = true;
+              console.error('背景圖片載入失敗:', cleanedBackgroundUrl, error);
+              setImageError(true);
+              setImageLoading(false);
+            }
+          }
+        };
+        
+        img.src = cleanedBackgroundUrl;
       };
       
-      img.onerror = () => {
-        if (!isCancelled && !loadingCompleted) {
-          loadingCompleted = true;
-          setImageError(true);
-          setImageLoading(false);
-        }
-      };
+      tryLoadImage(false);
       
-      img.src = processedUrl;
-      
+      // 設置超時，如果圖片載入時間過長，也視為錯誤
       const timeout = setTimeout(() => {
         if (!isCancelled && !loadingCompleted) {
           loadingCompleted = true;
+          console.warn('背景圖片載入超時:', cleanedBackgroundUrl);
           setImageError(true);
           setImageLoading(false);
         }
-      }, 10000);
+      }, 15000); // 15秒超時
 
       return () => {
         isCancelled = true;
@@ -234,201 +139,160 @@ const App: React.FC = () => {
       setImageError(false);
       setImageLoading(false);
     }
-  }, [processedUrl]);
+  }, [cleanedBackgroundUrl]);
 
-  const backgroundStyle: React.CSSProperties = processedUrl && !imageError ? {
-    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.4)), url("${processedUrl}")`,
+  const backgroundStyle: React.CSSProperties = cleanedBackgroundUrl && !imageError ? {
+    backgroundImage: `url("${cleanedBackgroundUrl}")`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    backgroundAttachment: 'fixed',
+    backgroundAttachment: 'scroll',
   } : {
     backgroundColor: '#0f172a'
   };
 
-  // 處理滑鼠移動事件，檢測是否在底部區域
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const windowHeight = window.innerHeight;
-    const mouseY = e.clientY;
-    const threshold = 150; // 距離底部 150px 時顯示
-    
-    if (windowHeight - mouseY <= threshold) {
-      setShowFooter(true);
-    } else {
-      setShowFooter(false);
-    }
-  };
-
   return (
-    <div 
-      className="h-screen flex flex-col relative transition-all duration-1000 ease-in-out font-['Noto Sans TC'] overflow-hidden" 
-      style={backgroundStyle}
-      onMouseMove={handleMouseMove}
-    >
-      {processedUrl && imageError && (
-        <div className="absolute top-20 right-4 z-50 bg-red-600/90 backdrop-blur-md text-white p-4 rounded-xl shadow-2xl border border-red-500/50 max-w-sm animate-fade-in">
+    <div className="min-h-screen flex flex-col relative transition-all duration-1000 ease-in-out font-['Noto Sans TC']" style={backgroundStyle}>
+      {/* 背景圖片載入錯誤提示 */}
+      {cleanedBackgroundUrl && imageError && (
+        <div className="fixed top-20 right-4 z-50 bg-red-600/90 backdrop-blur-md text-white p-5 rounded-xl shadow-2xl border border-red-500/50 max-w-md animate-fade-in">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <div>
-              <p className="font-bold text-sm mb-1">背景載入失敗</p>
-              <p className="text-xs text-red-100">請確認 Google Drive 連結權限已設定為「知道連結的人均可查看」。</p>
-              <button onClick={() => setConfig({ ...config, backgroundImageUrl: '' })} className="mt-3 text-xs font-bold underline">清除網址</button>
+            <svg className="w-6 h-6 text-red-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <p className="font-bold text-sm mb-2">背景圖片載入失敗</p>
+              <p className="text-xs text-red-100 leading-relaxed mb-3">
+                無法載入背景圖片，已切換為預設背景。
+              </p>
+              <div className="bg-red-700/30 rounded-lg p-3 mb-3">
+                <p className="text-xs font-bold text-red-200 mb-2">建議解決方案：</p>
+                <ul className="text-xs text-red-100 space-y-1.5 list-disc list-inside">
+                  <li>確認圖片網址完整且正確（需包含 http:// 或 https://）</li>
+                  <li>使用支援公開存取的圖片服務（如 Unsplash, Pexels）</li>
+                  <li>如果使用自架圖片，請確保允許跨域存取（CORS）</li>
+                  <li>可嘗試使用圖片代理服務</li>
+                </ul>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setConfig({ ...config, backgroundImageUrl: '' });
+                    setImageError(false);
+                  }}
+                  className="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors"
+                >
+                  清除背景圖
+                </button>
+                <button
+                  onClick={() => {
+                    // 強制重新載入圖片
+                    setImageError(false);
+                    setImageLoading(true);
+                    // 觸發 useEffect 重新執行
+                    const currentUrl = config.backgroundImageUrl;
+                    setConfig({ ...config, backgroundImageUrl: '' });
+                    setTimeout(() => {
+                      setConfig({ ...config, backgroundImageUrl: currentUrl || '' });
+                    }, 100);
+                  }}
+                  className="flex-1 px-3 py-2 bg-red-700/50 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors border border-red-500/50"
+                >
+                  重新載入
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+      <div className={`absolute inset-0 z-0 transition-all duration-1000 bg-transparent`}></div>
 
-      <div className="relative z-10 flex flex-col h-full">
-        <header className="px-10 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/20 flex-shrink-0 bg-slate-900/40 backdrop-blur-md">
-          <div className="flex items-center gap-6 flex-1">
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <div className="max-w-[1600px] w-full mx-auto flex flex-col flex-1">
+          <header className="px-10 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 bg-transparent flex-shrink-0">
+          <div className="flex items-center gap-6">
             <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-lg">{config.title}</h1>
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-black text-white tracking-tight drop-shadow-md">{config.title}</h1>
                 {config.targetClass && <span className="bg-amber-500 text-black px-3 py-1 rounded-md text-xs font-black uppercase shadow-lg">{config.targetClass} 專屬</span>}
               </div>
-              <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-lg">{config.venue}</p>
+              <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-md">{config.venue}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-800/60 backdrop-blur-md rounded-xl p-2 border border-white/10">
-              <label className="text-sm font-bold text-blue-300 uppercase tracking-wider px-2">班級</label>
-              <select
-                value={currentClass}
-                onChange={(e) => handleClassChange(e.target.value)}
-                className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-bold focus:ring-2 focus:ring-blue-500 outline-none min-w-[100px]"
-              >
-                {classes.map(cls => (
-                  <option key={cls} value={cls}>{cls}</option>
-                ))}
-              </select>
-              {showNewClassInput ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newClassName}
-                    onChange={(e) => setNewClassName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddClass()}
-                    placeholder="班級名稱"
-                    className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none w-24"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleAddClass}
-                    className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold text-sm transition-colors"
-                  >
-                    確認
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowNewClassInput(false);
-                      setNewClassName('');
-                    }}
-                    className="px-3 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-bold text-sm transition-colors"
-                  >
-                    取消
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowNewClassInput(true)}
-                    className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm transition-colors flex items-center gap-1"
-                    title="新增班級"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                  {classes.length > 1 && (
-                    <button
-                      onClick={handleDeleteClass}
-                      className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold text-sm transition-colors"
-                      title="刪除當前班級"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-            <Clock />
-          </div>
-        </header>
+          <Clock />
+          </header>
 
-        <main className="flex-1 px-10 py-6 overflow-y-auto">
+          <main className="flex-1 px-10 py-6">
           {viewMode === 'signage' ? (
             <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 max-w-[1900px] mx-auto">
               <div className="lg:col-span-6 space-y-6">
                 {ongoingExam && (
-                  <div className="p-8 rounded-[40px] bg-slate-900/60 backdrop-blur-xl border border-white/10 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-2xl">
+                  <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] flex flex-col md:flex-row items-center justify-between shadow-2xl relative overflow-hidden">
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-4">
                         <span className="inline-block px-4 py-1 bg-red-600 text-white text-[11px] font-black rounded-lg animate-pulse uppercase tracking-widest">進行中考試 NOW</span>
                       </div>
-                      <h2 className="text-6xl font-black text-white mb-2 tracking-tighter drop-shadow-2xl">{ongoingExam.subject}</h2>
-                      <p className="text-xl text-white/90 font-bold">考場: {ongoingExam.room} | 班級: {ongoingExam.class}</p>
+                      <h2 className="text-5xl font-black text-white mb-2 tracking-tighter">{ongoingExam.subject}</h2>
+                      <p className="text-lg text-red-100 font-bold">考場: {ongoingExam.room} | 班級: {ongoingExam.class}</p>
                     </div>
                     <div className="relative z-10 text-right">
-                      <p className="text-red-400 text-sm font-black uppercase tracking-widest mb-2">剩餘時間</p>
-                      <CountdownTimer endTime={ongoingExam.endTime} className="text-7xl font-black text-white tabular-nums tracking-tighter" />
+                      <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2">剩餘時間</p>
+                      <CountdownTimer endTime={ongoingExam.endTime} className="text-6xl font-black text-white drop-shadow-2xl tabular-nums tracking-tighter" />
                     </div>
                   </div>
                 )}
-                <div className="bg-slate-900/60 backdrop-blur-xl rounded-[32px] border border-white/10 overflow-hidden shadow-2xl">
-                   <ExamTable sessions={filteredSessions} currentTime={currentTime} />
-                </div>
+                <ExamTable sessions={filteredSessions} currentTime={currentTime} />
               </div>
 
               <div className="lg:col-span-4 space-y-6">
-                <div className="p-8 rounded-[32px] bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-black text-white uppercase tracking-widest">應考人數統計</h3>
-                    {!config.showAttendance && <span className="px-3 py-1 bg-slate-800 text-slate-500 rounded text-[10px] font-bold tracking-widest">HIDDEN</span>}
+                <div className="bg-transparent backdrop-blur-sm p-5 rounded-[24px] border border-white/5 shadow-2xl">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-lg font-black text-white uppercase tracking-widest">應考人數統計</h3>
+                    {!config.showAttendance && <span className="px-2 py-1 bg-slate-800 text-slate-500 rounded text-[9px] font-bold tracking-widest">HIDDEN</span>}
+                    <span className="text-[9px] font-bold text-slate-500 tracking-[0.2em] uppercase">TOUCH TO EDIT</span>
                   </div>
 
                   {activeFocusSession ? (
-                    <div className="space-y-6">
-                      <div className="space-y-3">
+                    <div className="space-y-5">
+                      <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-sm font-black text-blue-400 tracking-widest uppercase">應到人數</span>
-                          <span className="text-white text-4xl font-black tabular-nums">
-                            {config.showAttendance ? (activeFocusSession.expectedCount ?? 0) : '---'}
+                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase">應到人數 (EXPECTED)</span>
+                          <span className="text-white text-3xl font-black tabular-nums">
+                            {config.showAttendance ? (activeFocusSession.expectedCount ?? 0) : ''}
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', -1)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black transition-all active:scale-95 border border-white/10">-</button>
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', 1)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black transition-all active:scale-95 border border-white/10">+</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', -1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">-</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', 1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">+</button>
                         </div>
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-sm font-black text-blue-400 tracking-widest uppercase">實到人數</span>
-                          <span className="text-white text-4xl font-black tabular-nums">
-                            {config.showAttendance ? (activeFocusSession.presentCount ?? 0) : '---'}
+                          <span className="text-lg font-black text-blue-400 tracking-widest uppercase">實到人數 (PRESENT)</span>
+                          <span className="text-white text-3xl font-black tabular-nums">
+                            {config.showAttendance ? (activeFocusSession.presentCount ?? 0) : ''}
                           </span>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', -1)} className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black transition-all active:scale-95 border border-white/10">-</button>
-                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', 1)} className="flex-1 py-3 bg-blue-600/80 hover:bg-blue-600 text-white rounded-xl font-black transition-all active:scale-95 border border-blue-400/30">+</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', -1)} className="flex-1 py-2 bg-[#1f2937] hover:bg-slate-700 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/5 shadow-lg">-</button>
+                          <button onClick={() => updateAttendance(activeFocusSession.id, 'present', 1)} className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xl transition-all active:scale-95 shadow-xl shadow-blue-600/40 border border-white/10">+</button>
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-white/10">
-                        <p className="text-sm font-black text-red-400 uppercase tracking-widest mb-4">缺席人數</p>
+                      <div className="pt-4 border-t border-white/5">
+                        <p className="text-lg font-black text-blue-400 uppercase tracking-widest mb-2">缺席人數 (ABSENT)</p>
                         <div className="flex items-center justify-between">
-                          <p className={`text-5xl font-black tabular-nums transition-colors duration-500 ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-white/20'}`}>
-                            {config.showAttendance ? (activeFocusSession.absentCount ?? 0) : '---'}
+                          <p className={`text-3xl font-black tabular-nums transition-colors duration-500 ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-slate-800'}`}>
+                            {config.showAttendance ? (activeFocusSession.absentCount ?? 0) : ''}
                           </p>
                           {config.showAttendance && (activeFocusSession.absentCount || 0) > 0 && (
-                            <div className="bg-red-500/20 p-4 rounded-full animate-pulse border border-red-500/30">
+                            <div className="bg-red-500/10 p-4 rounded-full animate-pulse border border-red-500/20">
                               <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                             </div>
                           )}
@@ -436,52 +300,47 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-white/30 font-black uppercase tracking-widest text-xs border-2 border-dashed border-white/10 rounded-2xl">
+                    <div className="text-center py-12 text-slate-700 font-black uppercase tracking-[0.3em] text-xs border-2 border-dashed border-white/5 rounded-2xl">
                       目前無活動中之考科
                     </div>
                   )}
                 </div>
 
-                <div className="p-8 rounded-[32px] bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl">
-                  <h3 className="text-xl font-black text-white mb-6 uppercase tracking-widest border-b border-white/10 pb-4">考場規範</h3>
+                <div className="bg-transparent backdrop-blur-sm p-6 rounded-[32px] border border-white/5 shadow-xl">
+                  <h3 className="text-lg font-black text-slate-200 mb-5 uppercase tracking-widest border-b border-white/5 pb-3">考場規範</h3>
                   {config.examRules && config.examRules.length > 0 ? (
-                    <ul className="space-y-4 text-white/90 font-bold text-lg leading-relaxed">
+                    <ul className="space-y-3 text-slate-300 font-bold text-base leading-relaxed">
                       {config.examRules.map((rule, index) => (
-                        <li key={index} className="flex gap-4">
-                          <span className="text-blue-400 font-black">{String(index + 1).padStart(2, '0')}</span>
+                        <li key={index} className="flex gap-5">
+                          <span className="text-blue-500 font-black text-xl">{String(index + 1).padStart(2, '0')}</span>
                           <span>{rule}</span>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <div className="text-center py-8 text-white/30 italic">目前無考場規範</div>
+                    <div className="text-center py-8 text-slate-600 font-bold italic">
+                      目前無考場規範
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           ) : (
-            <AdminPanel 
-              config={config} 
-              setConfig={setConfig} 
-              sessions={sessions} 
-              setSessions={setSessions}
-              currentClass={currentClass}
-            />
+            <AdminPanel config={config} setConfig={setConfig} sessions={sessions} setSessions={setSessions} />
           )}
-        </main>
+          </main>
 
-        <footer className={`fixed bottom-0 left-0 right-0 p-6 border-t border-white/10 flex justify-center gap-6 bg-slate-900/60 backdrop-blur-md transition-all duration-300 z-50 ${
-          showFooter ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
-        }`}>
-          <button onClick={() => setViewMode('signage')} className={`px-10 py-4 rounded-full font-black text-sm transition-all flex items-center gap-3 tracking-widest uppercase ${viewMode === 'signage' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-white/5 text-white/50 hover:text-white border border-white/10'}`}>
+          <footer className="p-4 bg-transparent backdrop-blur-sm border-t border-white/5 flex justify-center gap-6 flex-shrink-0">
+          <button onClick={() => setViewMode('signage')} className={`px-12 py-4 rounded-full font-black text-sm transition-all flex items-center gap-3 tracking-[0.2em] uppercase ${viewMode === 'signage' ? 'bg-blue-600 text-white shadow-2xl shadow-blue-600/30' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-            白板展示
+            白板展示模式
           </button>
-          <button onClick={() => setViewMode('admin')} className={`px-10 py-4 rounded-full font-black text-sm transition-all flex items-center gap-3 tracking-widest uppercase ${viewMode === 'admin' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'bg-white/5 text-white/50 hover:text-white border border-white/10'}`}>
+          <button onClick={() => setViewMode('admin')} className={`px-12 py-4 rounded-full font-black text-sm transition-all flex items-center gap-3 tracking-[0.2em] uppercase ${viewMode === 'admin' ? 'bg-blue-600 text-white shadow-2xl shadow-blue-600/30' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-            後台編輯
+            後台編輯模式
           </button>
-        </footer>
+          </footer>
+        </div>
       </div>
     </div>
   );
