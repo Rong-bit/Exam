@@ -32,6 +32,10 @@ const App: React.FC = () => {
   ]);
 
   const [currentTime, setCurrentTime] = useState('');
+  const [editingExpected, setEditingExpected] = useState(false);
+  const [editingPresent, setEditingPresent] = useState(false);
+  const [expectedInputValue, setExpectedInputValue] = useState('');
+  const [presentInputValue, setPresentInputValue] = useState('');
 
   useEffect(() => {
     const updateTime = () => {
@@ -82,6 +86,30 @@ const App: React.FC = () => {
         } else if (type === 'expected') {
           updated.expectedCount = Math.max(0, (s.expectedCount ?? 0) + delta);
         }
+        updated.absentCount = Math.max(0, (updated.expectedCount || 0) - (updated.presentCount || 0));
+        return updated;
+      }
+      return s;
+    }));
+  };
+
+  const handleExpectedInputChange = (sessionId: string, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        const updated = { ...s, expectedCount: Math.max(0, numValue) };
+        updated.absentCount = Math.max(0, (updated.expectedCount || 0) - (updated.presentCount || 0));
+        return updated;
+      }
+      return s;
+    }));
+  };
+
+  const handlePresentInputChange = (sessionId: string, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setSessions(prev => prev.map(s => {
+      if (s.id === sessionId) {
+        const updated = { ...s, presentCount: Math.max(0, numValue) };
         updated.absentCount = Math.max(0, (updated.expectedCount || 0) - (updated.presentCount || 0));
         return updated;
       }
@@ -308,9 +336,37 @@ const App: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between items-end">
                           <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black border border-white/20 rounded-lg">應到人數 (EXPECTED)</span>
-                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg">
-                            {config.showAttendance ? (activeFocusSession.expectedCount ?? 0) : ''}
-                          </span>
+                          {editingExpected ? (
+                            <input
+                              type="number"
+                              className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border-2 border-blue-400 rounded-lg w-32 text-right focus:outline-none"
+                              value={expectedInputValue}
+                              onChange={(e) => setExpectedInputValue(e.target.value)}
+                              onBlur={() => {
+                                handleExpectedInputChange(activeFocusSession.id, expectedInputValue);
+                                setEditingExpected(false);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleExpectedInputChange(activeFocusSession.id, expectedInputValue);
+                                  setEditingExpected(false);
+                                } else if (e.key === 'Escape') {
+                                  setEditingExpected(false);
+                                }
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg cursor-pointer hover:border-blue-400 transition-colors"
+                              onClick={() => {
+                                setExpectedInputValue(String(activeFocusSession.expectedCount ?? 0));
+                                setEditingExpected(true);
+                              }}
+                            >
+                              {config.showAttendance ? (activeFocusSession.expectedCount ?? 0) : ''}
+                            </span>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => updateAttendance(activeFocusSession.id, 'expected', -1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">-</button>
@@ -321,9 +377,37 @@ const App: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex justify-between items-end">
                           <span className="text-lg font-black text-blue-400 tracking-widest uppercase px-3 py-1 bg-black border border-white/20 rounded-lg">實到人數 (PRESENT)</span>
-                          <span className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg">
-                            {config.showAttendance ? (activeFocusSession.presentCount ?? 0) : ''}
-                          </span>
+                          {editingPresent ? (
+                            <input
+                              type="number"
+                              className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border-2 border-blue-400 rounded-lg w-32 text-right focus:outline-none"
+                              value={presentInputValue}
+                              onChange={(e) => setPresentInputValue(e.target.value)}
+                              onBlur={() => {
+                                handlePresentInputChange(activeFocusSession.id, presentInputValue);
+                                setEditingPresent(false);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handlePresentInputChange(activeFocusSession.id, presentInputValue);
+                                  setEditingPresent(false);
+                                } else if (e.key === 'Escape') {
+                                  setEditingPresent(false);
+                                }
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className="text-white text-3xl font-black tabular-nums px-4 py-2 bg-black border border-white/20 rounded-lg cursor-pointer hover:border-blue-400 transition-colors"
+                              onClick={() => {
+                                setPresentInputValue(String(activeFocusSession.presentCount ?? 0));
+                                setEditingPresent(true);
+                              }}
+                            >
+                              {config.showAttendance ? (activeFocusSession.presentCount ?? 0) : ''}
+                            </span>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => updateAttendance(activeFocusSession.id, 'present', -1)} className="flex-1 py-2 bg-transparent hover:bg-white/10 text-white rounded-xl font-black text-xl transition-all active:scale-95 border border-white/10 shadow-lg">-</button>
@@ -334,7 +418,7 @@ const App: React.FC = () => {
                       <div className="pt-4 border-t border-white/5">
                         <p className="text-lg font-black text-blue-400 uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">缺席人數 (ABSENT)</p>
                         <div className="flex items-center justify-between">
-                          <p className={`text-3xl font-black tabular-nums transition-colors duration-500 px-4 py-2 bg-black border border-white/20 rounded-lg ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-slate-800'}`}>
+                          <p className={`text-3xl font-black tabular-nums transition-colors duration-500 px-4 py-2 bg-black border border-white/20 rounded-lg ${config.showAttendance && (activeFocusSession.absentCount || 0) > 0 ? 'text-red-500' : 'text-white'}`}>
                             {config.showAttendance ? (activeFocusSession.absentCount ?? 0) : ''}
                           </p>
                           {config.showAttendance && (activeFocusSession.absentCount || 0) > 0 && (
