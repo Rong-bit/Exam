@@ -86,20 +86,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
       <div className={`${className} w-full`}>
         <div className="w-full bg-slate-700/50 rounded-full h-8 md:h-12 overflow-hidden border-2 border-white/20 relative">
           <div 
-            className={`${progressColor} h-full transition-all duration-1000 ease-linear ${progress > 15 ? 'flex items-center justify-center' : ''}`}
+            className={`${progressColor} h-full transition-all duration-1000 ease-linear ${isUrgent ? 'animate-pulse' : ''}`}
             style={{ width: `${progress}%` }}
           >
-            {progress > 15 && (
-              <span className={`font-mono font-black text-white drop-shadow-lg text-xs md:text-lg whitespace-nowrap ${isUrgent ? 'animate-pulse' : ''}`}>
-                {timeLeft}
-              </span>
-            )}
           </div>
-          {progress <= 15 && (
-            <span className={`absolute inset-0 flex items-center justify-center font-mono font-black text-white drop-shadow-lg text-xs md:text-lg pointer-events-none ${isUrgent ? 'animate-pulse' : ''}`}>
-              {timeLeft}
-            </span>
-          )}
         </div>
       </div>
     );
