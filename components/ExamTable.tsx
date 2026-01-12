@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ExamSession } from '../types';
-import CountdownTimer from './CountdownTimer';
 
 interface ExamTableProps {
   sessions: ExamSession[];
@@ -62,19 +61,6 @@ const ExamTable: React.FC<ExamTableProps> = ({ sessions, currentTime, targetClas
                     <div className="text-base text-slate-100 drop-shadow-md px-2 py-1 bg-black border border-white/20 rounded inline-block">
                       {session.startTime} - {session.endTime}
                     </div>
-                    {status === 'ongoing' && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-red-400 font-bold uppercase px-2 py-1 bg-black border border-white/20 rounded">剩餘</span>
-                        <div className="flex-1 px-2 py-1 bg-black border border-white/20 rounded">
-                          <CountdownTimer 
-                            startTime={session.startTime}
-                            endTime={session.endTime} 
-                            className="w-full"
-                            showProgressBar={true}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </td>
                   <td className="px-4 py-4 text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     <span className="px-2 py-1 bg-black border border-white/20 rounded inline-block">{session.subject}</span>
