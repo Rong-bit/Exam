@@ -269,17 +269,14 @@ const App: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
               <div className="lg:col-span-6 space-y-6">
                 {ongoingExam && (
-                  <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] flex flex-col md:flex-row items-center justify-between shadow-2xl relative overflow-hidden">
+                  <div className="bg-transparent border-2 border-red-500/20 backdrop-blur-sm p-6 rounded-[40px] shadow-2xl relative overflow-hidden">
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-4">
                         <span className="inline-block px-4 py-1 bg-red-600 text-white text-[11px] font-black rounded-lg animate-pulse uppercase tracking-widest">進行中考試 NOW</span>
                       </div>
                       <h2 className="text-5xl font-black text-white mb-2 tracking-tighter px-4 py-2 bg-black border border-white/20 rounded-lg inline-block">{ongoingExam.subject}</h2>
-                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2">班級: {config.targetClass || ongoingExam.class || '全部班級'}</p>
-                    </div>
-                    <div className="relative z-10 w-full md:w-auto">
-                      <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">剩餘時間</p>
-                      <div className="px-4 py-2 bg-black border border-white/20 rounded-lg mt-2 w-full md:w-auto">
+                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2 mb-4">班級: {config.targetClass || ongoingExam.class || '全部班級'}</p>
+                      <div className="mt-4">
                         <CountdownTimer 
                           startTime={ongoingExam.startTime}
                           endTime={ongoingExam.endTime} 
