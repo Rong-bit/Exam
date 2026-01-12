@@ -43,10 +43,28 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 從所有sessions中提取唯一的班級列表
+  const allClasses = useMemo(() => {
+    const classSet = new Set<string>();
+    sessions.forEach(session => {
+      session.class.split(',').forEach(c => {
+        const trimmed = c.trim();
+        if (trimmed) classSet.add(trimmed);
+      });
+    });
+    return Array.from(classSet).sort();
+  }, [sessions]);
+
   const filteredSessions = useMemo(() => {
     if (!config.targetClass) return sessions;
     const filter = config.targetClass.trim().toLowerCase();
-    return sessions.filter(s => s.class.toLowerCase().includes(filter));
+    return sessions.filter(s => {
+      const sessionClass = (s.class || '').trim().toLowerCase();
+      // 如果班級字段為空，則適用所有班級（顯示在所有篩選中）
+      if (!sessionClass) return true;
+      // 否則使用原有的篩選邏輯
+      return sessionClass.includes(filter);
+    });
   }, [sessions, config.targetClass]);
 
   const ongoingExam = filteredSessions.find(s => currentTime >= s.startTime && currentTime < s.endTime);
@@ -224,7 +242,24 @@ const App: React.FC = () => {
               <p className="text-blue-400 font-bold text-lg mt-1 drop-shadow-md px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">{config.venue}</p>
             </div>
           </div>
-          <Clock />
+          <div className="flex flex-col items-end gap-4">
+            {viewMode === 'signage' && allClasses.length > 0 && (
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-bold text-slate-300 uppercase tracking-wider px-2 py-1 bg-black border border-white/20 rounded-lg">篩選班級</label>
+                <select
+                  value={config.targetClass || ''}
+                  onChange={(e) => setConfig({ ...config, targetClass: e.target.value })}
+                  className="bg-slate-800 border border-white/20 rounded-lg px-4 py-2 text-white font-bold focus:ring-2 focus:ring-blue-400 focus:outline-none cursor-pointer"
+                >
+                  <option value="">全部班級</option>
+                  {allClasses.map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <Clock />
+          </div>
           </header>
 
           <main className="flex-1 px-10 py-6">
@@ -238,7 +273,7 @@ const App: React.FC = () => {
                         <span className="inline-block px-4 py-1 bg-red-600 text-white text-[11px] font-black rounded-lg animate-pulse uppercase tracking-widest">進行中考試 NOW</span>
                       </div>
                       <h2 className="text-5xl font-black text-white mb-2 tracking-tighter px-4 py-2 bg-black border border-white/20 rounded-lg inline-block">{ongoingExam.subject}</h2>
-                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2">考場: {ongoingExam.room} | 班級: {ongoingExam.class}</p>
+                      <p className="text-lg text-red-100 font-bold px-3 py-1 bg-black border border-white/20 rounded-lg inline-block mt-2">班級: {config.targetClass || ongoingExam.class || '全部班級'}</p>
                     </div>
                     <div className="relative z-10 text-right">
                       <p className="text-red-300 text-sm font-black uppercase tracking-widest mb-2 px-3 py-1 bg-black border border-white/20 rounded-lg inline-block">剩餘時間</p>
@@ -248,7 +283,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
-                <ExamTable sessions={filteredSessions} currentTime={currentTime} />
+                <ExamTable sessions={filteredSessions} currentTime={currentTime} targetClass={config.targetClass} />
               </div>
 
               <div className="lg:col-span-4 space-y-6">
